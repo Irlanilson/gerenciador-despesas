@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gerenciador de Despesas</title>
+
+  <meta name="description" content="Aplicativo simples para controle de despesas pessoais.">
+  <meta name="apple-mobile-web-app-title" content="Gerenciador de Despesas">
+  <meta name="application-name" content="Gerenciador de Despesas">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#dc3545">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-danger">
+  <div class="container">
+    <span class="navbar-brand mb-0 h1"><i class="bi bi-wallet2"></i> Gerenciador de Despesas</span>
+  </div>
+</nav>
+
+<main class="container py-3">
+  <ul class="nav nav-tabs mb-3 flex-nowrap overflow-auto">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dashboard"><i class="bi bi-pie-chart"></i> Dashboard</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#despesas"><i class="bi bi-receipt"></i> Despesas</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#categorias"><i class="bi bi-grid"></i> Categorias</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tags"><i class="bi bi-tags"></i> Tags</button></li>
+  </ul>
+
+  <div class="tab-content">
+    <section class="tab-pane fade show active" id="dashboard">
+      <div class="card card-body shadow-sm mb-3">
+        <h5>Dashboard mensal</h5>
+        <div class="row g-2">
+          <div class="col-6 col-md-3"><label class="form-label">Ano</label><select id="dashboardYear" class="form-select"></select></div>
+          <div class="col-6 col-md-3"><label class="form-label">Mês</label><select id="dashboardMonth" class="form-select"></select></div>
+        </div>
+      </div>
+      <div id="dashboardList"></div>
+      <div class="card card-body shadow-sm mt-3">
+        <small class="text-muted">Total gasto no mês</small>
+        <h2 id="dashboardTotal" class="mb-0 text-danger">R$ 0,00</h2>
+      </div>
+    </section>
+
+    <section class="tab-pane fade" id="despesas">
+      <form id="expenseForm" class="card card-body shadow-sm mb-3">
+        <h5>Cadastro de Despesa</h5>
+        <input type="hidden" id="expenseId">
+        <div class="row g-2">
+          <div class="col-md-4"><label class="form-label">Descrição</label><input id="expenseDescription" class="form-control" required></div>
+          <div class="col-md-2"><label class="form-label">Valor</label><input id="expenseValue" type="number" min="0" step="0.01" class="form-control" required></div>
+          <div class="col-md-2"><label class="form-label">Data</label><input id="expenseDate" type="date" class="form-control" required></div>
+          <div class="col-md-2"><label class="form-label">Categoria</label><select id="expenseCategory" class="form-select" required></select></div>
+          <div class="col-md-2"><label class="form-label">Tag</label><select id="expenseTag" class="form-select"></select></div>
+        </div>
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn btn-danger"><i class="bi bi-save"></i> Salvar</button>
+          <button type="button" class="btn btn-outline-secondary" onclick="clearExpenseForm()">Limpar</button>
+        </div>
+      </form>
+
+      <div class="card card-body shadow-sm mb-3">
+        <h5>Filtros</h5>
+        <div class="row g-2">
+          <div class="col-6 col-md-2"><label class="form-label">Ano</label><select id="filterYear" class="form-select"></select></div>
+          <div class="col-6 col-md-2"><label class="form-label">Mês</label><select id="filterMonth" class="form-select"></select></div>
+          <div class="col-md-3"><label class="form-label">Categoria</label><select id="filterCategory" class="form-select"></select></div>
+          <div class="col-md-3"><label class="form-label">Tag</label><select id="filterTag" class="form-select"></select></div>
+        </div>
+      </div>
+
+      <div id="expensesList"></div>
+      <div class="card card-body shadow-sm mt-3">
+        <small class="text-muted">Total das despesas filtradas</small>
+        <h3 id="expensesTotal" class="mb-0 text-danger">R$ 0,00</h3>
+      </div>
+    </section>
+
+    <section class="tab-pane fade" id="categorias">
+      <form id="categoryForm" class="card card-body shadow-sm mb-3">
+        <h5>Cadastro de Categoria</h5>
+        <input type="hidden" id="categoryId">
+        <div class="row g-2">
+          <div class="col-md-6"><label class="form-label">Descrição</label><input id="categoryDescription" class="form-control" required></div>
+          <div class="col-md-4">
+            <label class="form-label">Ícone Bootstrap</label>
+            <select id="categoryIcon" class="form-select" required>
+              <option value="bi-car-front">Carro</option>
+              <option value="bi-fuel-pump">Combustível</option>
+              <option value="bi-calendar-check">Gastos Fixos</option>
+              <option value="bi-briefcase">Trabalho</option>
+              <option value="bi-cup-straw">Lazer e Lanches</option>
+              <option value="bi-three-dots">Variados</option>
+              <option value="bi-phone">Recarga Celular</option>
+              <option value="bi-basket">Alimentação</option>
+              <option value="bi-bus-front">Transporte</option>
+              <option value="bi-airplane">Viagens</option>
+              <option value="bi-heart-pulse">Saúde</option>
+              <option value="bi-gift">Doação</option>
+              <option value="bi-dice-5">Loterias e Jogos</option>
+              <option value="bi-book">Educação</option>
+              <option value="bi-droplet">Água</option>
+              <option value="bi-house">Casa</option>
+              <option value="bi-lightning-charge">Energia</option>
+              <option value="bi-controller">Jogos</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-flex align-items-end"><button class="btn btn-danger w-100">Salvar</button></div>
+        </div>
+      </form>
+      <div id="categoriesList"></div>
+    </section>
+
+    <section class="tab-pane fade" id="tags">
+      <form id="tagForm" class="card card-body shadow-sm mb-3">
+        <h5>Cadastro de Tag</h5>
+        <input type="hidden" id="tagId">
+        <div class="row g-2">
+          <div class="col-md-10"><label class="form-label">Descrição</label><input id="tagDescription" class="form-control" required></div>
+          <div class="col-md-2 d-flex align-items-end"><button class="btn btn-danger w-100">Salvar</button></div>
+        </div>
+      </form>
+      <div id="tagsList"></div>
+    </section>
+  </div>
+
+  <div class="card card-body shadow-sm mt-4">
+    <h5>Backup</h5>
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-outline-danger" onclick="exportBackup()">Exportar backup</button>
+      <input id="backupInput" type="file" accept="application/json" hidden>
+      <button class="btn btn-outline-secondary" onclick="document.getElementById('backupInput').click()">Importar backup</button>
+    </div>
+  </div>
+</main>
+
+<div class="modal fade" id="categoryExpensesModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 id="categoryExpensesTitle" class="modal-title">Despesas da categoria</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="categoryExpensesList"></div>
+        <div class="card card-body bg-light mt-3">
+          <small class="text-muted">Total da categoria</small>
+          <h3 id="categoryExpensesTotal" class="mb-0 text-danger">R$ 0,00</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
