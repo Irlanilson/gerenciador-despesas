@@ -1,1 +1,142 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Gerenciador de Despesas</title><meta name="theme-color" content="#dc3545"><meta name="apple-mobile-web-app-title" content="Despesas"><meta name="application-name" content="Despesas"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><link rel="stylesheet" href="style.css"></head><body><header class="topbar"><div><h1>Gerenciador de Despesas</h1><p>Controle mensal de gastos por categoria</p></div></header><main class="container"><nav class="tabs"><button class="tab active" data-tab="dashboard">◔ Dashboard</button><button class="tab" data-tab="despesas">▤ Despesas</button><button class="tab" data-tab="categorias">▦ Categorias</button><button class="tab" data-tab="tags">🏷 Tags</button><button class="tab" data-tab="backup">☁ Backup</button></nav><section id="dashboard" class="tab-content active"><div class="card filter-card"><h2>Dashboard mensal</h2><div class="grid form-grid"><label>Ano <select id="dashboardYear"></select></label><label>Mês <select id="dashboardMonth"></select></label></div></div><div id="dashboardList"></div><div class="card stat"><span>Total gasto no mês</span><strong id="dashboardTotal">R$ 0,00</strong></div></section><section id="despesas" class="tab-content"><form id="expenseForm" class="card form-card"><h2>Cadastro de Despesa</h2><input type="hidden" id="expenseId"><div class="grid form-grid"><label>Descrição <input id="expenseDescription" required></label><label>Valor <input id="expenseValue" type="number" min="0" step="0.01" required></label><label>Data <input id="expenseDate" type="date" required></label><label>Categoria <select id="expenseCategory" required></select></label><label>Tag <select id="expenseTag"></select></label></div><div class="actions"><button class="primary">Salvar despesa</button><button type="button" class="secondary" onclick="clearExpenseForm()">Limpar</button></div></form><div class="card filter-card"><h2>Filtros</h2><div class="grid form-grid"><label>Ano <select id="filterYear"></select></label><label>Mês <select id="filterMonth"></select></label><label>Categoria <select id="filterCategory"></select></label><label>Tag <select id="filterTag"></select></label></div></div><div id="expensesList"></div><div class="card stat"><span>Total filtrado</span><strong id="expensesTotal">R$ 0,00</strong></div></section><section id="categorias" class="tab-content"><form id="categoryForm" class="card form-card"><h2>Cadastro de Categoria</h2><input type="hidden" id="categoryId"><div class="grid form-grid"><label>Descrição <input id="categoryDescription" required></label><label>Ícone<select id="categoryIcon" required><option value="🚗">🚗 Carro</option><option value="⛽">⛽ Combustível</option><option value="📅">📅 Gastos Fixos</option><option value="💼">💼 Trabalho</option><option value="🍔">🍔 Lazer e Lanches</option><option value="•••">••• Variados</option><option value="📱">📱 Recarga Celular</option><option value="🛒">🛒 Alimentação</option><option value="🚌">🚌 Transporte</option><option value="✈️">✈️ Viagens</option><option value="❤️">❤️ Saúde</option><option value="🎁">🎁 Doação</option><option value="🎲">🎲 Loterias e Jogos</option><option value="📚">📚 Educação</option><option value="💧">💧 Água</option></select></label></div><div class="actions"><button class="primary">Salvar categoria</button><button type="button" class="secondary" onclick="clearCategoryForm()">Limpar</button></div></form><div id="categoriesList"></div></section><section id="tags" class="tab-content"><form id="tagForm" class="card form-card"><h2>Cadastro de Tag</h2><input type="hidden" id="tagId"><label>Descrição <input id="tagDescription" required></label><div class="actions"><button class="primary">Salvar tag</button><button type="button" class="secondary" onclick="clearTagForm()">Limpar</button></div></form><div id="tagsList"></div></section><section id="backup" class="tab-content"><div class="card form-card"><h2>Backup e restauração</h2><p class="muted">Importa backup da versão anterior ou restaura automaticamente dados antigos deste navegador.</p><div class="actions"><button class="primary" onclick="exportBackup()">Exportar backup</button><label class="file-btn">Importar backup<input id="backupInput" type="file" accept="application/json" hidden></label><button class="secondary" onclick="restoreLegacyData()">Restaurar dados da versão anterior neste navegador</button></div></div></section></main><div class="modal-backdrop" id="categoryModal"><div class="modal"><div class="modal-header"><h2 id="categoryExpensesTitle"></h2><button class="close-btn" onclick="closeCategoryModal()">×</button></div><div id="categoryExpensesList"></div><div class="card stat"><span>Total da categoria</span><strong id="categoryExpensesTotal">R$ 0,00</strong></div></div></div><script src="app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Gerenciador de Despesas</title>
+
+  <meta name="theme-color" content="#dc3545">
+  <meta name="description" content="Aplicativo para controle de despesas pessoais.">
+  <meta name="apple-mobile-web-app-title" content="Despesas">
+  <meta name="application-name" content="Despesas">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Gerenciador de Despesas</h1>
+  <p>Controle mensal de gastos</p>
+</header>
+
+<main>
+  <nav>
+    <button class="tab active" data-tab="dashboard">Dashboard</button>
+    <button class="tab" data-tab="despesas">Despesas</button>
+    <button class="tab" data-tab="categorias">Categorias</button>
+    <button class="tab" data-tab="tags">Tags</button>
+    <button class="tab" data-tab="backup">Backup</button>
+  </nav>
+
+  <section id="dashboard" class="page active">
+    <div class="panel">
+      <h2>Dashboard mensal</h2>
+      <div class="grid">
+        <label>Ano <select id="dashboardYear"></select></label>
+        <label>Mês <select id="dashboardMonth"></select></label>
+      </div>
+    </div>
+    <div id="dashboardList"></div>
+    <div class="card"><span>Total gasto no mês</span><strong id="dashboardTotal">R$ 0,00</strong></div>
+  </section>
+
+  <section id="despesas" class="page">
+    <form id="expenseForm" class="panel">
+      <h2>Cadastro de Despesa</h2>
+      <input type="hidden" id="expenseId">
+      <div class="grid">
+        <label>Descrição <input id="expenseDescription" required></label>
+        <label>Valor <input id="expenseValue" type="number" min="0" step="0.01" required></label>
+        <label>Data <input id="expenseDate" type="date" required></label>
+        <label>Categoria <select id="expenseCategory" required></select></label>
+        <label>Tag <select id="expenseTag"></select></label>
+      </div>
+      <div class="actions">
+        <button>Salvar</button>
+        <button type="button" class="secondary" onclick="clearExpenseForm()">Limpar</button>
+      </div>
+    </form>
+
+    <div class="panel">
+      <h2>Filtros</h2>
+      <div class="grid">
+        <label>Ano <select id="filterYear"></select></label>
+        <label>Mês <select id="filterMonth"></select></label>
+        <label>Categoria <select id="filterCategory"></select></label>
+        <label>Tag <select id="filterTag"></select></label>
+      </div>
+    </div>
+
+    <div id="expensesList"></div>
+    <div class="card"><span>Total filtrado</span><strong id="expensesTotal">R$ 0,00</strong></div>
+  </section>
+
+  <section id="categorias" class="page">
+    <form id="categoryForm" class="panel">
+      <h2>Cadastro de Categoria</h2>
+      <input type="hidden" id="categoryId">
+      <div class="grid">
+        <label>Descrição <input id="categoryDescription" required></label>
+        <label>Ícone
+          <select id="categoryIcon" required>
+            <option value="🚗">🚗 Carro</option><option value="⛽">⛽ Combustível</option><option value="📅">📅 Gastos Fixos</option><option value="💼">💼 Trabalho</option><option value="🍔">🍔 Lazer e Lanches</option><option value="•••">••• Variados</option><option value="📱">📱 Recarga Celular</option><option value="🛒">🛒 Alimentação</option><option value="🚌">🚌 Transporte</option><option value="✈️">✈️ Viagens</option><option value="❤️">❤️ Saúde</option><option value="🎁">🎁 Doação</option><option value="🎲">🎲 Loterias e Jogos</option><option value="📚">📚 Educação</option><option value="💧">💧 Água</option>
+          </select>
+        </label>
+      </div>
+      <div class="actions">
+        <button>Salvar categoria</button>
+        <button type="button" class="secondary" onclick="clearCategoryForm()">Limpar</button>
+      </div>
+    </form>
+    <div id="categoriesList"></div>
+  </section>
+
+  <section id="tags" class="page">
+    <form id="tagForm" class="panel">
+      <h2>Cadastro de Tag</h2>
+      <input type="hidden" id="tagId">
+      <label>Descrição <input id="tagDescription" required></label>
+      <div class="actions">
+        <button>Salvar tag</button>
+        <button type="button" class="secondary" onclick="clearTagForm()">Limpar</button>
+      </div>
+    </form>
+    <div id="tagsList"></div>
+  </section>
+
+  <section id="backup" class="page">
+    <div class="panel">
+      <h2>Backup</h2>
+      <p>Importe backup da versão anterior ou exporte seus dados atuais.</p>
+      <div class="actions">
+        <button onclick="exportBackup()">Exportar backup</button>
+        <label class="file">Importar backup<input id="backupInput" type="file" accept="application/json" hidden></label>
+        <button type="button" class="secondary" onclick="restoreLegacyData()">Restaurar dados antigos</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="categoryModal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="categoryExpensesTitle"></h2>
+      <button class="secondary" onclick="closeCategoryModal()">×</button>
+    </div>
+    <div id="categoryExpensesList"></div>
+    <div class="card"><span>Total da categoria</span><strong id="categoryExpensesTotal">R$ 0,00</strong></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

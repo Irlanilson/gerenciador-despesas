@@ -1,1 +1,1 @@
-Gerenciador de Despesas V2 offline, sem Bootstrap. Importa backup/dados das versões anteriores.
+Gerenciador de Despesas atualizado com ícones PNG para iPhone: icon-180.png, icon-192.png e icon-512.png.
