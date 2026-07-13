@@ -1,13 +1,18 @@
-Gerenciador de Despesas — versão ajustada
+Gerenciador de Despesas 3.0
 
-Alterações:
-- Barra de rolagem das abas posicionada mais abaixo, sem cortar visualmente os botões.
-- Novo filtro de texto livre pela descrição da despesa.
-- A consulta por descrição é atualizada enquanto você digita.
-- Mantida a mesma chave de armazenamento local, portanto os dados já cadastrados continuam disponíveis.
-- Cache do service worker atualizado para forçar a instalação da nova versão.
+Novidades:
+- Despesas recorrentes com geração mensal sem duplicação.
+- Orçamento mensal por categoria.
+- Comparação com o mês anterior.
+- Gráfico dos últimos 6 meses sem bibliotecas externas.
+- Duplicação de despesas.
+- Botão flutuante de cadastro rápido.
+- Resumo de gastos de hoje, semana e mês.
+- Calendário mensal com total por dia.
+- Exportação CSV das despesas filtradas.
+- Busca por descrição.
+- Mantém importação e migração de dados das versões anteriores.
 
-Depois de publicar no GitHub Pages:
-1. Atualize/substitua os arquivos do projeto.
-2. Abra o app com internet.
-3. Caso ainda apareça a versão antiga, feche e abra novamente o app ou remova e adicione o atalho outra vez.
+Compatibilidade:
+A primeira abertura tenta importar automaticamente dados das chaves antigas do localStorage.
+Também é possível importar o backup JSON das versões anteriores pela aba Backup.

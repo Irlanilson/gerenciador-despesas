@@ -3,23 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <title>Gerenciador de Despesas</title>
-
   <meta name="theme-color" content="#dc3545">
   <meta name="description" content="Aplicativo para controle de despesas pessoais.">
   <meta name="apple-mobile-web-app-title" content="Despesas">
   <meta name="application-name" content="Despesas">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -32,6 +27,8 @@
   <nav>
     <button class="tab active" data-tab="dashboard">Dashboard</button>
     <button class="tab" data-tab="despesas">Despesas</button>
+    <button class="tab" data-tab="calendario">Calendário</button>
+    <button class="tab" data-tab="recorrentes">Recorrentes</button>
     <button class="tab" data-tab="categorias">Categorias</button>
     <button class="tab" data-tab="tags">Tags</button>
     <button class="tab" data-tab="backup">Backup</button>
@@ -45,8 +42,29 @@
         <label>Mês <select id="dashboardMonth"></select></label>
       </div>
     </div>
+
+    <div class="summary-grid">
+      <div class="card"><span>Hoje</span><strong id="summaryToday">R$ 0,00</strong></div>
+      <div class="card"><span>Esta semana</span><strong id="summaryWeek">R$ 0,00</strong></div>
+      <div class="card"><span>Este mês</span><strong id="summaryMonth">R$ 0,00</strong></div>
+    </div>
+
+    <div class="card compare-card">
+      <span>Comparação com o mês anterior</span>
+      <strong id="monthComparison">Sem dados</strong>
+    </div>
+
+    <div class="panel">
+      <h2>Evolução dos últimos 6 meses</h2>
+      <div id="monthlyChart" class="chart"></div>
+    </div>
+
     <div id="dashboardList"></div>
-    <div class="card"><span>Total gasto no mês</span><strong id="dashboardTotal">R$ 0,00</strong></div>
+
+    <div class="card">
+      <span>Total gasto no mês</span>
+      <strong id="dashboardTotal">R$ 0,00</strong>
+    </div>
   </section>
 
   <section id="despesas" class="page">
@@ -79,8 +97,64 @@
       </div>
     </div>
 
+    <div class="actions export-row">
+      <button type="button" onclick="exportCSV()">Exportar CSV</button>
+    </div>
+
     <div id="expensesList"></div>
     <div class="card"><span>Total filtrado</span><strong id="expensesTotal">R$ 0,00</strong></div>
+  </section>
+
+  <section id="calendario" class="page">
+    <div class="panel">
+      <h2>Calendário de despesas</h2>
+      <div class="grid">
+        <label>Ano <select id="calendarYear"></select></label>
+        <label>Mês <select id="calendarMonth"></select></label>
+      </div>
+    </div>
+    <div class="calendar-weekdays">
+      <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+    </div>
+    <div id="calendarGrid" class="calendar-grid"></div>
+  </section>
+
+  <section id="recorrentes" class="page">
+    <form id="recurringForm" class="panel">
+      <h2>Despesa recorrente</h2>
+      <input type="hidden" id="recurringId">
+      <div class="grid">
+        <label>Descrição <input id="recurringDescription" required></label>
+        <label>Valor <input id="recurringValue" type="number" min="0" step="0.01" required></label>
+        <label>Dia do mês <input id="recurringDay" type="number" min="1" max="31" required></label>
+        <label>Categoria <select id="recurringCategory" required></select></label>
+        <label>Tag <select id="recurringTag"></select></label>
+        <label>Ativa
+          <select id="recurringActive">
+            <option value="true">Sim</option>
+            <option value="false">Não</option>
+          </select>
+        </label>
+      </div>
+      <div class="actions">
+        <button>Salvar recorrente</button>
+        <button type="button" class="secondary" onclick="clearRecurringForm()">Limpar</button>
+      </div>
+    </form>
+
+    <div class="panel">
+      <h2>Gerar despesas recorrentes</h2>
+      <p>Cria as despesas recorrentes ativas para o mês selecionado, sem duplicar lançamentos já gerados.</p>
+      <div class="grid">
+        <label>Ano <select id="recurringYear"></select></label>
+        <label>Mês <select id="recurringMonth"></select></label>
+      </div>
+      <div class="actions">
+        <button type="button" onclick="generateRecurringExpenses()">Gerar despesas do mês</button>
+      </div>
+    </div>
+
+    <div id="recurringList"></div>
   </section>
 
   <section id="categorias" class="page">
@@ -93,6 +167,9 @@
           <select id="categoryIcon" required>
             <option value="🚗">🚗 Carro</option><option value="⛽">⛽ Combustível</option><option value="📅">📅 Gastos Fixos</option><option value="💼">💼 Trabalho</option><option value="🍔">🍔 Lazer e Lanches</option><option value="•••">••• Variados</option><option value="📱">📱 Recarga Celular</option><option value="🛒">🛒 Alimentação</option><option value="🚌">🚌 Transporte</option><option value="✈️">✈️ Viagens</option><option value="❤️">❤️ Saúde</option><option value="🎁">🎁 Doação</option><option value="🎲">🎲 Loterias e Jogos</option><option value="📚">📚 Educação</option><option value="💧">💧 Água</option>
           </select>
+        </label>
+        <label>Orçamento mensal (opcional)
+          <input id="categoryBudget" type="number" min="0" step="0.01" placeholder="Ex.: 500,00">
         </label>
       </div>
       <div class="actions">
@@ -119,7 +196,7 @@
   <section id="backup" class="page">
     <div class="panel">
       <h2>Backup</h2>
-      <p>Importe backup da versão anterior ou exporte seus dados atuais.</p>
+      <p>Importe backups anteriores ou exporte todos os dados atuais.</p>
       <div class="actions">
         <button onclick="exportBackup()">Exportar backup</button>
         <label class="file">Importar backup<input id="backupInput" type="file" accept="application/json" hidden></label>
@@ -129,6 +206,26 @@
   </section>
 </main>
 
+<button id="quickAddButton" class="fab" title="Cadastro rápido">+</button>
+
+<div id="quickAddModal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Cadastro rápido</h2>
+      <button class="secondary" onclick="closeQuickAdd()">×</button>
+    </div>
+    <form id="quickAddForm">
+      <label>Descrição <input id="quickDescription" required></label>
+      <label>Valor <input id="quickValue" type="number" min="0" step="0.01" required></label>
+      <label>Categoria <select id="quickCategory" required></select></label>
+      <label>Tag <select id="quickTag"></select></label>
+      <div class="actions">
+        <button>Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div id="categoryModal" class="modal-bg">
   <div class="modal">
     <div class="modal-head">
@@ -137,6 +234,17 @@
     </div>
     <div id="categoryExpensesList"></div>
     <div class="card"><span>Total da categoria</span><strong id="categoryExpensesTotal">R$ 0,00</strong></div>
+  </div>
+</div>
+
+<div id="dayModal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="dayExpensesTitle"></h2>
+      <button class="secondary" onclick="closeDayModal()">×</button>
+    </div>
+    <div id="dayExpensesList"></div>
+    <div class="card"><span>Total do dia</span><strong id="dayExpensesTotal">R$ 0,00</strong></div>
   </div>
 </div>
 
