@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pwa-ios-icons-v1';
+const CACHE_NAME = 'gerenciador-despesas-v2-ajustes-1';
 const FILES_TO_CACHE = [
   './',
   'index.html',

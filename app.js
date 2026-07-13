@@ -37,7 +37,23 @@ function clearTagForm(){byId('tagForm').reset();byId('tagId').value=''}
 
 byId('expenseForm').onsubmit=e=>{e.preventDefault();const id=byId('expenseId').value;const exp={id:id?Number(id):nextId(expenses),description:byId('expenseDescription').value.trim(),value:Number(byId('expenseValue').value),date:byId('expenseDate').value,categoryId:Number(byId('expenseCategory').value),tagId:byId('expenseTag').value?Number(byId('expenseTag').value):''};if(!exp.description||!exp.value||!exp.date||!exp.categoryId){alert('Preencha os campos obrigatórios.');return}if(id)expenses[expenses.findIndex(x=>x.id==id)]=exp;else expenses.push(exp);save();clearExpenseForm();renderAll()}
 function clearExpenseForm(){byId('expenseForm').reset();byId('expenseId').value='';byId('expenseDate').value=today()}
-function filteredExpenses(){const y=Number(byId('filterYear').value),m=Number(byId('filterMonth').value),c=byId('filterCategory').value,t=byId('filterTag').value;return expenses.filter(e=>{const d=new Date(e.date+'T00:00:00');return d.getFullYear()==y&&d.getMonth()+1==m&&(!c||e.categoryId==c)&&(!t||e.tagId==t)})}
+function filteredExpenses(){
+ const y=Number(byId('filterYear').value),
+       m=Number(byId('filterMonth').value),
+       c=byId('filterCategory').value,
+       t=byId('filterTag').value,
+       description=byId('filterDescription').value.trim().toLocaleLowerCase('pt-BR');
+
+ return expenses.filter(e=>{
+  const d=new Date(e.date+'T00:00:00');
+  const matchesDescription=!description||String(e.description||'').toLocaleLowerCase('pt-BR').includes(description);
+  return d.getFullYear()==y &&
+         d.getMonth()+1==m &&
+         (!c||e.categoryId==c) &&
+         (!t||e.tagId==t) &&
+         matchesDescription;
+ });
+}
 function renderExpenses(){const data=filteredExpenses().sort((a,b)=>String(b.date).localeCompare(String(a.date)));byId('expensesList').innerHTML=data.length?data.map(e=>{const c=getCategory(e.categoryId),t=getTag(e.tagId);return `<div class="item"><div><span class="badge">${c?esc(c.icon):''} ${c?esc(c.description):'Sem categoria'}</span><h3>${esc(e.description)}</h3><p class="muted">${brDate(e.date)}${t?' • '+esc(t.description):''}</p></div><div><div class="money">${money(e.value)}</div><div class="actions"><button onclick="editExpense(${e.id})">Editar</button><button class="secondary" onclick="deleteExpense(${e.id})">Excluir</button></div></div></div>`}).join(''):'<div class="empty">Nenhuma despesa.</div>';byId('expensesTotal').innerText=money(data.reduce((s,e)=>s+e.value,0))}
 function editExpense(id){const e=expenses.find(x=>x.id==id);byId('expenseId').value=e.id;byId('expenseDescription').value=e.description;byId('expenseValue').value=e.value;byId('expenseDate').value=e.date;byId('expenseCategory').value=e.categoryId;byId('expenseTag').value=e.tagId||'';document.querySelector('[data-tab="despesas"]').click();window.scrollTo({top:0,behavior:'smooth'})}
 function deleteExpense(id){if(confirm('Excluir despesa?')){expenses=expenses.filter(e=>e.id!=id);save();renderAll()}}
@@ -50,6 +66,8 @@ function closeCategoryModal(){byId('categoryModal').classList.remove('show')}
 function exportBackup(){const blob=new Blob([JSON.stringify({categories,tags,expenses},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup-despesas.json';a.click()}
 byId('backupInput').onchange=e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);categories=(d.categories||[]).map(c=>({...c,icon:convertIcon(c.icon)}));tags=d.tags||[];expenses=d.expenses||[];if(!categories.length)defaults();save();renderAll();alert('Backup importado.')}catch{alert('Backup inválido.')}};r.readAsText(file)}
 
-['filterYear','filterMonth','filterCategory','filterTag'].forEach(id=>byId(id).onchange=renderExpenses);['dashboardYear','dashboardMonth'].forEach(id=>byId(id).onchange=renderDashboard);
+['filterYear','filterMonth','filterCategory','filterTag'].forEach(id=>byId(id).onchange=renderExpenses);
+byId('filterDescription').oninput=renderExpenses;
+['dashboardYear','dashboardMonth'].forEach(id=>byId(id).onchange=renderDashboard);
 function renderAll(){renderOptions();renderCategoriesList();renderTagsList();renderExpenses();renderDashboard()}
 load();fillDates();renderAll();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
