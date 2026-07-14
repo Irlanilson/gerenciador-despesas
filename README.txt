@@ -1,13 +1,19 @@
-Gerenciador de Despesas 3.0 — calendário corrigido
+Gerenciador de Despesas 3.2
 
-Correção:
-- Os dias do mês agora ficam alinhados corretamente com os dias da semana.
-- As colunas do calendário usam largura uniforme.
-- Ajustes extras para telas pequenas do iPhone.
-- O cache do service worker foi atualizado para carregar a correção.
+Atualização:
+- Ao clicar em Editar, o aplicativo abre a aba correta.
+- A página rola suavemente até o formulário correspondente.
+- O primeiro campo do formulário recebe foco automaticamente.
+- Aplicado em:
+  - Despesas.
+  - Duplicação de despesas.
+  - Categorias.
+  - Tags.
+  - Despesas recorrentes.
+- Mantidos os dados, backups e recursos das versões anteriores.
+- Cache do service worker atualizado.
 
-Após publicar no GitHub Pages:
-1. Substitua os arquivos antigos por estes.
+Depois de publicar no GitHub Pages:
+1. Substitua os arquivos antigos.
 2. Abra o app com internet.
-3. Feche e abra novamente o app.
-4. Caso ainda veja a versão antiga, remova o atalho e adicione novamente.
+3. Feche e abra novamente para carregar a atualização.

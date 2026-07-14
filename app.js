@@ -6,7 +6,43 @@ function byId(id){return document.getElementById(id)}
 function esc(t){return String(t??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;")}
 function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function brDate(d){if(!d)return'';const [y,m,day]=d.split('-');return `${day}/${m}/${y}`}
-function today(){return new Date().toISOString().slice(0,10)}
+function today(){
+ const now=new Date();
+ const year=now.getFullYear();
+ const month=String(now.getMonth()+1).padStart(2,'0');
+ const day=String(now.getDate()).padStart(2,'0');
+ return `${year}-${month}-${day}`;
+}
+
+function parseCurrency(value){
+ const normalized=String(value||'').replace(/\s/g,'').replace(/\./g,'').replace(',','.').replace(/[^\d.-]/g,'');
+ return Number(normalized)||0;
+}
+function formatCurrencyInput(value){
+ const digits=String(value||'').replace(/\D/g,'');
+ if(!digits)return '';
+ return (Number(digits)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function bindCurrencyMask(id){
+ const input=byId(id); if(!input)return;
+ input.addEventListener('input',()=>{input.value=formatCurrencyInput(input.value);input.setSelectionRange(input.value.length,input.value.length)});
+ input.addEventListener('blur',()=>{if(input.value)input.value=formatCurrencyInput(input.value)});
+}
+function setCurrencyField(id,value){
+ byId(id).value=value?Number(value).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
+}
+
+
+function scrollToForm(formId, focusId){
+ const form=byId(formId);
+ if(!form)return;
+ form.scrollIntoView({behavior:'smooth',block:'start'});
+ setTimeout(()=>{
+  const field=byId(focusId);
+  if(field)field.focus({preventScroll:true});
+ },350);
+}
+
 function nextId(list){return list.length?Math.max(...list.map(i=>Number(i.id)))+1:1}
 function monthName(m){return ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][m-1]}
 function convertIcon(icon){const map={'bi-car-front':'🚗','bi-fuel-pump':'⛽','bi-calendar-check':'📅','bi-briefcase':'💼','bi-cup-straw':'🍔','bi-three-dots':'•••','bi-phone':'📱','bi-basket':'🛒','bi-bus-front':'🚌','bi-airplane':'✈️','bi-heart-pulse':'❤️','bi-gift':'🎁','bi-dice-5':'🎲','bi-book':'📚','bi-droplet':'💧'};return map[icon]||icon||'•••'}
@@ -67,7 +103,7 @@ function renderOptions(){
 byId('categoryForm').onsubmit=e=>{
  e.preventDefault();
  const id=byId('categoryId').value;
- const c={id:id?Number(id):nextId(categories),description:byId('categoryDescription').value.trim(),icon:byId('categoryIcon').value,budget:Number(byId('categoryBudget').value||0)};
+ const c={id:id?Number(id):nextId(categories),description:byId('categoryDescription').value.trim(),icon:byId('categoryIcon').value,budget:parseCurrency(byId('categoryBudget').value)};
  if(!c.description)return;
  if(id)categories[categories.findIndex(x=>x.id==id)]=c;else categories.push(c);
  save();clearCategoryForm();renderAll();
@@ -75,19 +111,33 @@ byId('categoryForm').onsubmit=e=>{
 function renderCategoriesList(){
  byId('categoriesList').innerHTML=categories.length?categories.map(c=>`<div class="item"><div style="display:flex;gap:12px;align-items:center"><div class="icon">${esc(c.icon)}</div><div><strong>${esc(c.description)}</strong><div class="muted">${c.budget?`Orçamento: ${money(c.budget)}`:'Sem orçamento definido'}</div></div></div><div class="actions"><button onclick="editCategory(${c.id})">Editar</button><button class="secondary" onclick="deleteCategory(${c.id})">Excluir</button></div></div>`).join(''):'<div class="empty">Nenhuma categoria.</div>'
 }
-function editCategory(id){const c=getCategory(id);byId('categoryId').value=c.id;byId('categoryDescription').value=c.description;byId('categoryIcon').value=c.icon;byId('categoryBudget').value=c.budget||''}
+function editCategory(id){
+ const c=getCategory(id);
+ byId('categoryId').value=c.id;
+ byId('categoryDescription').value=c.description;
+ byId('categoryIcon').value=c.icon;
+ setCurrencyField('categoryBudget',c.budget);
+ document.querySelector('[data-tab="categorias"]').click();
+ scrollToForm('categoryForm','categoryDescription');
+}
 function deleteCategory(id){if(expenses.some(e=>e.categoryId==id)||recurring.some(r=>r.categoryId==id)){alert('Categoria em uso.');return}if(confirm('Excluir categoria?')){categories=categories.filter(c=>c.id!=id);save();renderAll()}}
 function clearCategoryForm(){byId('categoryForm').reset();byId('categoryId').value=''}
 
 byId('tagForm').onsubmit=e=>{e.preventDefault();const id=byId('tagId').value;const t={id:id?Number(id):nextId(tags),description:byId('tagDescription').value.trim()};if(!t.description)return;if(id)tags[tags.findIndex(x=>x.id==id)]=t;else tags.push(t);save();clearTagForm();renderAll()}
 function renderTagsList(){byId('tagsList').innerHTML=tags.length?tags.map(t=>`<div class="item"><strong>🏷 ${esc(t.description)}</strong><div class="actions"><button onclick="editTag(${t.id})">Editar</button><button class="secondary" onclick="deleteTag(${t.id})">Excluir</button></div></div>`).join(''):'<div class="empty">Nenhuma tag.</div>'}
-function editTag(id){const t=getTag(id);byId('tagId').value=t.id;byId('tagDescription').value=t.description}
+function editTag(id){
+ const t=getTag(id);
+ byId('tagId').value=t.id;
+ byId('tagDescription').value=t.description;
+ document.querySelector('[data-tab="tags"]').click();
+ scrollToForm('tagForm','tagDescription');
+}
 function deleteTag(id){if(expenses.some(e=>e.tagId==id)||recurring.some(r=>r.tagId==id)){alert('Tag em uso.');return}if(confirm('Excluir tag?')){tags=tags.filter(t=>t.id!=id);save();renderAll()}}
 function clearTagForm(){byId('tagForm').reset();byId('tagId').value=''}
 
 byId('expenseForm').onsubmit=e=>{
  e.preventDefault();const id=byId('expenseId').value;
- const exp={id:id?Number(id):nextId(expenses),description:byId('expenseDescription').value.trim(),value:Number(byId('expenseValue').value),date:byId('expenseDate').value,categoryId:Number(byId('expenseCategory').value),tagId:byId('expenseTag').value?Number(byId('expenseTag').value):''};
+ const exp={id:id?Number(id):nextId(expenses),description:byId('expenseDescription').value.trim(),value:parseCurrency(byId('expenseValue').value),date:byId('expenseDate').value,categoryId:Number(byId('expenseCategory').value),tagId:byId('expenseTag').value?Number(byId('expenseTag').value):''};
  if(!exp.description||!exp.value||!exp.date||!exp.categoryId){alert('Preencha os campos obrigatórios.');return}
  if(id){const old=expenses.find(x=>x.id==id);if(old?.recurringId)exp.recurringId=old.recurringId;expenses[expenses.findIndex(x=>x.id==id)]=exp}else expenses.push(exp);
  save();clearExpenseForm();renderAll();
@@ -102,17 +152,37 @@ function renderExpenses(){
  byId('expensesList').innerHTML=data.length?data.map(e=>{const c=getCategory(e.categoryId),t=getTag(e.tagId);return `<div class="item"><div><span class="badge">${c?esc(c.icon):''} ${c?esc(c.description):'Sem categoria'}</span><h3>${esc(e.description)}</h3><p class="muted">${brDate(e.date)}${t?' • '+esc(t.description):''}${e.recurringId?' • Recorrente':''}</p></div><div><div class="money">${money(e.value)}</div><div class="actions"><button onclick="editExpense(${e.id})">Editar</button><button onclick="duplicateExpense(${e.id})">Duplicar</button><button class="secondary" onclick="deleteExpense(${e.id})">Excluir</button></div></div></div>`}).join(''):'<div class="empty">Nenhuma despesa.</div>';
  byId('expensesTotal').innerText=money(data.reduce((s,e)=>s+e.value,0));
 }
-function editExpense(id){const e=expenses.find(x=>x.id==id);byId('expenseId').value=e.id;byId('expenseDescription').value=e.description;byId('expenseValue').value=e.value;byId('expenseDate').value=e.date;byId('expenseCategory').value=e.categoryId;byId('expenseTag').value=e.tagId||'';document.querySelector('[data-tab="despesas"]').click();window.scrollTo({top:0,behavior:'smooth'})}
-function duplicateExpense(id){const e=expenses.find(x=>x.id==id);byId('expenseId').value='';byId('expenseDescription').value=e.description;byId('expenseValue').value=e.value;byId('expenseDate').value=today();byId('expenseCategory').value=e.categoryId;byId('expenseTag').value=e.tagId||'';document.querySelector('[data-tab="despesas"]').click();window.scrollTo({top:0,behavior:'smooth'})}
+function editExpense(id){
+ const e=expenses.find(x=>x.id==id);
+ byId('expenseId').value=e.id;
+ byId('expenseDescription').value=e.description;
+ setCurrencyField('expenseValue',e.value);
+ byId('expenseDate').value=e.date;
+ byId('expenseCategory').value=e.categoryId;
+ byId('expenseTag').value=e.tagId||'';
+ document.querySelector('[data-tab="despesas"]').click();
+ scrollToForm('expenseForm','expenseDescription');
+}
+function duplicateExpense(id){
+ const e=expenses.find(x=>x.id==id);
+ byId('expenseId').value='';
+ byId('expenseDescription').value=e.description;
+ setCurrencyField('expenseValue',e.value);
+ byId('expenseDate').value=today();
+ byId('expenseCategory').value=e.categoryId;
+ byId('expenseTag').value=e.tagId||'';
+ document.querySelector('[data-tab="despesas"]').click();
+ scrollToForm('expenseForm','expenseDescription');
+}
 function deleteExpense(id){if(confirm('Excluir despesa?')){expenses=expenses.filter(e=>e.id!=id);save();renderAll()}}
 
 byId('quickAddButton').onclick=()=>byId('quickAddModal').classList.add('show');
 function closeQuickAdd(){byId('quickAddModal').classList.remove('show');byId('quickAddForm').reset()}
-byId('quickAddForm').onsubmit=e=>{e.preventDefault();const exp={id:nextId(expenses),description:byId('quickDescription').value.trim(),value:Number(byId('quickValue').value),date:today(),categoryId:Number(byId('quickCategory').value),tagId:byId('quickTag').value?Number(byId('quickTag').value):''};if(!exp.description||!exp.value||!exp.categoryId)return;expenses.push(exp);save();closeQuickAdd();renderAll();alert('Despesa adicionada.');}
+byId('quickAddForm').onsubmit=e=>{e.preventDefault();const exp={id:nextId(expenses),description:byId('quickDescription').value.trim(),value:parseCurrency(byId('quickValue').value),date:today(),categoryId:Number(byId('quickCategory').value),tagId:byId('quickTag').value?Number(byId('quickTag').value):''};if(!exp.description||!exp.value||!exp.categoryId)return;expenses.push(exp);save();closeQuickAdd();renderAll();alert('Despesa adicionada.');}
 
 byId('recurringForm').onsubmit=e=>{
  e.preventDefault();const id=byId('recurringId').value;
- const r={id:id?Number(id):nextId(recurring),description:byId('recurringDescription').value.trim(),value:Number(byId('recurringValue').value),day:Number(byId('recurringDay').value),categoryId:Number(byId('recurringCategory').value),tagId:byId('recurringTag').value?Number(byId('recurringTag').value):'',active:byId('recurringActive').value==='true'};
+ const r={id:id?Number(id):nextId(recurring),description:byId('recurringDescription').value.trim(),value:parseCurrency(byId('recurringValue').value),day:Number(byId('recurringDay').value),categoryId:Number(byId('recurringCategory').value),tagId:byId('recurringTag').value?Number(byId('recurringTag').value):'',active:byId('recurringActive').value==='true'};
  if(!r.description||!r.value||!r.day||!r.categoryId)return;
  if(id)recurring[recurring.findIndex(x=>x.id==id)]=r;else recurring.push(r);save();clearRecurringForm();renderRecurring();
 }
@@ -120,7 +190,18 @@ function clearRecurringForm(){byId('recurringForm').reset();byId('recurringId').
 function renderRecurring(){
  byId('recurringList').innerHTML=recurring.length?recurring.map(r=>{const c=getCategory(r.categoryId),t=getTag(r.tagId);return `<div class="item"><div><span class="badge">${c?esc(c.icon):''} ${c?esc(c.description):''}</span><h3>${esc(r.description)}</h3><p class="muted">Dia ${r.day} • ${money(r.value)}${t?' • '+esc(t.description):''}</p><div class="recurring-status ${r.active?'active-status':'inactive-status'}">${r.active?'Ativa':'Inativa'}</div></div><div class="actions"><button onclick="editRecurring(${r.id})">Editar</button><button class="secondary" onclick="deleteRecurring(${r.id})">Excluir</button></div></div>`}).join(''):'<div class="empty">Nenhuma despesa recorrente.</div>'
 }
-function editRecurring(id){const r=recurring.find(x=>x.id==id);byId('recurringId').value=r.id;byId('recurringDescription').value=r.description;byId('recurringValue').value=r.value;byId('recurringDay').value=r.day;byId('recurringCategory').value=r.categoryId;byId('recurringTag').value=r.tagId||'';byId('recurringActive').value=String(r.active)}
+function editRecurring(id){
+ const r=recurring.find(x=>x.id==id);
+ byId('recurringId').value=r.id;
+ byId('recurringDescription').value=r.description;
+ setCurrencyField('recurringValue',r.value);
+ byId('recurringDay').value=r.day;
+ byId('recurringCategory').value=r.categoryId;
+ byId('recurringTag').value=r.tagId||'';
+ byId('recurringActive').value=String(r.active);
+ document.querySelector('[data-tab="recorrentes"]').click();
+ scrollToForm('recurringForm','recurringDescription');
+}
 function deleteRecurring(id){if(confirm('Excluir recorrente?')){recurring=recurring.filter(r=>r.id!=id);save();renderRecurring()}}
 function generateRecurringExpenses(){
  const y=Number(byId('recurringYear').value),m=Number(byId('recurringMonth').value);
@@ -186,4 +267,8 @@ byId('backupInput').onchange=e=>{const file=e.target.files[0];if(!file)return;co
 ['calendarYear','calendarMonth'].forEach(id=>byId(id).onchange=renderCalendar);
 
 function renderAll(){renderOptions();renderCategoriesList();renderTagsList();renderExpenses();renderRecurring();renderDashboard();renderCalendar()}
-load();fillDates();renderAll();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+load();
+fillDates();
+['expenseValue','recurringValue','quickValue','categoryBudget'].forEach(bindCurrencyMask);
+renderAll();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');

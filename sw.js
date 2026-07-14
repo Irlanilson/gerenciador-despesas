@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gerenciador-despesas-v3-calendario-2';
+const CACHE_NAME = 'gerenciador-despesas-v3-2-scroll-edicao';
 const FILES_TO_CACHE = [
   './',
   'index.html',
