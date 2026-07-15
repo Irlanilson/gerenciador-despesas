@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gerenciador_despesas-auto-backup-22h-v1';
+const CACHE_NAME = 'gerenciador_despesas-auto-backup-ios-focus-v2';
 const FILES_TO_CACHE = [
   './',
   'index.html',
