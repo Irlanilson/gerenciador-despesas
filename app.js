@@ -286,3 +286,5 @@ fillDates();
 renderAll();
 renderCloudPanel();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+
+setTimeout(()=>{if(typeof checkAutomaticBackup==='function')checkAutomaticBackup();},700);
