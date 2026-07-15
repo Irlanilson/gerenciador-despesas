@@ -1,3 +1,16 @@
+
+function getCloudPayload(){return {categories,tags,expenses,recurring}}
+function getCloudCounts(payload){
+ return `${(payload.categories||[]).length} categorias\n${(payload.tags||[]).length} tags\n${(payload.expenses||[]).length} despesas\n${(payload.recurring||[]).length} despesas recorrentes`;
+}
+function applyCloudPayload(payload){
+ categories=payload.categories||[];
+ tags=payload.tags||[];
+ expenses=payload.expenses||[];
+ recurring=payload.recurring||[];
+ normalize();save();renderAll();
+}
+
 const KEY='gerenciador_despesas_v3';
 const LEGACY_KEYS=['gerenciador_despesas_v2_ios','gerenciador_despesas_v2_categorias','gerenciador_despesas_v1'];
 let categories=[],tags=[],expenses=[],recurring=[];
@@ -271,4 +284,5 @@ load();
 fillDates();
 ['expenseValue','recurringValue','quickValue','categoryBudget'].forEach(bindCurrencyMask);
 renderAll();
+renderCloudPanel();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');

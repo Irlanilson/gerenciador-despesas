@@ -1,9 +1,11 @@
-const CACHE_NAME = 'gerenciador-despesas-v3-2-scroll-edicao';
+const CACHE_NAME = 'gerenciador-despesas-v4-sync-1';
 const FILES_TO_CACHE = [
   './',
   'index.html',
   'style.css',
   'app.js',
+  'config.js',
+  'sync.js',
   'manifest.json',
   'icon-180.png',
   'icon-192.png',

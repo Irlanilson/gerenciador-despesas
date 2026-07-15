@@ -31,6 +31,7 @@
     <button class="tab" data-tab="recorrentes">Recorrentes</button>
     <button class="tab" data-tab="categorias">Categorias</button>
     <button class="tab" data-tab="tags">Tags</button>
+    <button class="tab" data-tab="sincronizacao">Sincronização</button>
     <button class="tab" data-tab="backup">Backup</button>
   </nav>
 
@@ -193,6 +194,38 @@
     <div id="tagsList"></div>
   </section>
 
+
+  <section id="sincronizacao" class="page">
+    <div class="panel">
+      <h2>Sincronização na nuvem</h2>
+      <div id="cloudStatus" class="cloud-status"></div>
+
+      <form id="cloudAuth" onsubmit="submitCloudLogin(event)">
+        <label>E-mail <input id="cloudLoginEmail" type="email" autocomplete="email" required></label>
+        <label>Senha <input id="cloudLoginPassword" type="password" autocomplete="current-password" minlength="6" required></label>
+        <div class="actions">
+          <button>Entrar</button>
+          <button type="button" class="secondary" onclick="createCloudAccount()">Criar conta</button>
+        </div>
+      </form>
+
+      <div id="cloudConnected" hidden>
+        <div class="cloud-account">
+          <span>Conta</span>
+          <strong id="cloudEmail"></strong>
+          <span>Último backup na nuvem</span>
+          <strong id="cloudLastSync">Consultando...</strong>
+        </div>
+        <div class="actions cloud-actions">
+          <button type="button" onclick="uploadCloudData()">↑ Enviar para a nuvem</button>
+          <button type="button" onclick="downloadCloudData()">↓ Baixar da nuvem</button>
+          <button type="button" class="secondary" onclick="restorePreCloudBackup()">Restaurar cópia local anterior</button>
+          <button type="button" class="secondary" onclick="cloudSignOut()">Sair da conta</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="backup" class="page">
     <div class="panel">
       <h2>Backup</h2>
@@ -248,6 +281,9 @@
   </div>
 </div>
 
+<script>window.CLOUD_APP_NAME='gerenciador_despesas';</script>
+<script src="config.js"></script>
+<script src="sync.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
