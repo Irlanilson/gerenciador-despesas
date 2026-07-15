@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gerenciador-despesas-v4-sync-1';
+const CACHE_NAME = 'gerenciador_despesas-sync-data-v2';
 const FILES_TO_CACHE = [
   './',
   'index.html',
