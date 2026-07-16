@@ -70,7 +70,7 @@ function normalize(){
  expenses=(expenses||[]).map(e=>({...e,id:Number(e.id),value:Number(e.value),categoryId:Number(e.categoryId),tagId:e.tagId?Number(e.tagId):'',recurringId:e.recurringId?Number(e.recurringId):''}));
  recurring=(recurring||[]).map(r=>({...r,id:Number(r.id),value:Number(r.value),day:Number(r.day),categoryId:Number(r.categoryId),tagId:r.tagId?Number(r.tagId):'',active:r.active!==false}));
 }
-function save(){localStorage.setItem(KEY,JSON.stringify({categories,tags,expenses,recurring}))}
+function save(){localStorage.setItem(KEY,JSON.stringify({categories,tags,expenses,recurring}));if(typeof scheduleSyncAfterChange==='function')scheduleSyncAfterChange()}
 function load(){
  const saved=localStorage.getItem(KEY);
  if(saved){try{const d=JSON.parse(saved);categories=d.categories||[];tags=d.tags||[];expenses=d.expenses||[];recurring=d.recurring||[];normalize();return}catch{}}
@@ -287,4 +287,6 @@ renderAll();
 renderCloudPanel();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 
-setTimeout(()=>{if(typeof safeAutomaticBackupCheck==='function')safeAutomaticBackupCheck();},1200);
+// Inicializar indicador de status e sync
+if(!navigator.onLine){updateSyncStatus('offline')}
+loadSyncQueue();
