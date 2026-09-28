@@ -17,6 +17,7 @@ let syncInProgress = false;
 const SYNC_DEBOUNCE_MS = 3000;
 const SYNC_QUEUE_KEY = `${CLOUD_APP_NAME}_sync_queue`;
 const SYNC_LAST_UPDATED_KEY = `${CLOUD_APP_NAME}_sync_last_updated_at`;
+const SYNC_LAST_HASH_KEY = `${CLOUD_APP_NAME}_sync_last_hash`;
 
 // ─── Configuração ──────────────────────────────────────────────────
 function cloudConfigured() {
@@ -208,17 +209,29 @@ async function performAutoSync() {
  updateSyncStatus('syncing');
 
  try {
-  // Prevenção de conflitos com updated_at
+  // Prevenção de conflitos: só é conflito real se OUTRO dispositivo alterou a
+  // nuvem desde a nossa última sincronização. Comparamos por conteúdo (hash),
+  // não por timestamp — o relógio do cliente e o do servidor podem divergir e
+  // gerar falsos conflitos que travam a sincronização automática.
   const lastKnown = localStorage.getItem(SYNC_LAST_UPDATED_KEY);
-  const meta = await getCloudMeta();
+  const lastHash = localStorage.getItem(SYNC_LAST_HASH_KEY);
+  const meta = await getCloudMeta(true);
 
   if (meta?.updated_at && lastKnown && new Date(meta.updated_at) > new Date(lastKnown)) {
-   updateSyncStatus('error');
-   console.warn('[Sync] Conflito: nuvem mais recente que local. Use download manual.');
-   return;
+   const cloudHash = meta.data ? simpleHash(stableStringify(meta.data)) : null;
+   // Conflito real apenas se o conteúdo da nuvem for diferente do que
+   // sincronizamos por último (ou seja, veio de outro dispositivo).
+   if (cloudHash && lastHash && cloudHash !== lastHash) {
+    updateSyncStatus('error');
+    console.warn('[Sync] Conflito real: a nuvem foi alterada por outro dispositivo. Use download manual.');
+    return;
+   }
+   // Caso contrário, é apenas divergência de timestamp da nossa própria
+   // escrita — seguimos com o envio normalmente.
   }
 
   const payload = getCloudPayload();
+  const payloadHash = simpleHash(stableStringify(payload));
   const updatedAt = new Date().toISOString();
 
   const response = await cloudRequest('/rest/v1/app_backups?on_conflict=user_id,app_name', {
@@ -233,6 +246,7 @@ async function performAutoSync() {
   const savedAt = result?.[0]?.updated_at || updatedAt;
 
   localStorage.setItem(SYNC_LAST_UPDATED_KEY, savedAt);
+  localStorage.setItem(SYNC_LAST_HASH_KEY, payloadHash);
   syncQueue = [];
   saveSyncQueue();
 
@@ -291,8 +305,9 @@ async function syncOnAppOpen() {
  }
 }
 
-async function getCloudMeta() {
- const response = await cloudRequest(`/rest/v1/app_backups?app_name=eq.${encodeURIComponent(CLOUD_APP_NAME)}&select=updated_at&order=updated_at.desc&limit=1`);
+async function getCloudMeta(includeData = false) {
+ const select = includeData ? 'updated_at,data' : 'updated_at';
+ const response = await cloudRequest(`/rest/v1/app_backups?app_name=eq.${encodeURIComponent(CLOUD_APP_NAME)}&select=${select}&order=updated_at.desc&limit=1`);
  if (!response.ok) throw new Error(await response.text());
  return (await response.json())[0] || null;
 }
@@ -373,6 +388,7 @@ async function uploadCloudData() {
    localStorage.setItem(SYNC_LAST_UPDATED_KEY, updatedAt);
    if (byId('cloudLastSync')) byId('cloudLastSync').textContent = cloudDate(updatedAt);
   }
+  localStorage.setItem(SYNC_LAST_HASH_KEY, simpleHash(stableStringify(payload)));
   syncQueue = [];
   saveSyncQueue();
   updateSyncStatus('synced');
@@ -402,6 +418,7 @@ async function downloadCloudData() {
   localStorage.setItem(CLOUD_LOCAL_SAFETY_KEY, JSON.stringify({ created_at: new Date().toISOString(), data: getCloudPayload() }));
   applyCloudPayload(payload);
   localStorage.setItem(SYNC_LAST_UPDATED_KEY, rows[0].updated_at);
+  localStorage.setItem(SYNC_LAST_HASH_KEY, simpleHash(stableStringify(payload)));
   syncQueue = [];
   saveSyncQueue();
   updateSyncStatus('synced');
