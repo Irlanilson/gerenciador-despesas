@@ -209,27 +209,10 @@ async function performAutoSync() {
  updateSyncStatus('syncing');
 
  try {
-  // Prevenção de conflitos: só é conflito real se OUTRO dispositivo alterou a
-  // nuvem desde a nossa última sincronização. Comparamos por conteúdo (hash),
-  // não por timestamp — o relógio do cliente e o do servidor podem divergir e
-  // gerar falsos conflitos que travam a sincronização automática.
-  const lastKnown = localStorage.getItem(SYNC_LAST_UPDATED_KEY);
-  const lastHash = localStorage.getItem(SYNC_LAST_HASH_KEY);
-  const meta = await getCloudMeta(true);
-
-  if (meta?.updated_at && lastKnown && new Date(meta.updated_at) > new Date(lastKnown)) {
-   const cloudHash = meta.data ? simpleHash(stableStringify(meta.data)) : null;
-   // Conflito real apenas se o conteúdo da nuvem for diferente do que
-   // sincronizamos por último (ou seja, veio de outro dispositivo).
-   if (cloudHash && lastHash && cloudHash !== lastHash) {
-    updateSyncStatus('error');
-    console.warn('[Sync] Conflito real: a nuvem foi alterada por outro dispositivo. Use download manual.');
-    return;
-   }
-   // Caso contrário, é apenas divergência de timestamp da nossa própria
-   // escrita — seguimos com o envio normalmente.
-  }
-
+  // Uso em dispositivo único: o estado local é sempre a fonte da verdade e
+  // sobrescreve a nuvem. Não há verificação de conflito — ela só poderia
+  // gerar falsos positivos (divergência de relógio cliente/servidor) e travar
+  // a sincronização automática.
   const payload = getCloudPayload();
   const payloadHash = simpleHash(stableStringify(payload));
   const updatedAt = new Date().toISOString();
