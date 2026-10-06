@@ -217,23 +217,27 @@ async function performAutoSync() {
   const payloadHash = simpleHash(stableStringify(payload));
   const updatedAt = new Date().toISOString();
 
+  // return=minimal: não devolvemos o registro inteiro no response. Em
+  // dispositivo único não precisamos do que a nuvem retorna, e isso evita
+  // transferir o payload de volta (reduz uso de rede e timeouts no celular).
   const response = await cloudRequest('/rest/v1/app_backups?on_conflict=user_id,app_name', {
    method: 'POST',
-   headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+   headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
    body: JSON.stringify({ user_id: user.id, app_name: CLOUD_APP_NAME, data: payload, updated_at: updatedAt })
   });
 
-  if (!response.ok) throw new Error(await response.text());
+  if (!response.ok) {
+   const body = await response.text();
+   throw new Error(`HTTP ${response.status} ${response.statusText} — ${body}`);
+  }
 
-  const result = await response.json();
-  const savedAt = result?.[0]?.updated_at || updatedAt;
-
-  localStorage.setItem(SYNC_LAST_UPDATED_KEY, savedAt);
+  // Sem return=representation, usamos o updated_at que enviamos como marcador.
+  localStorage.setItem(SYNC_LAST_UPDATED_KEY, updatedAt);
   localStorage.setItem(SYNC_LAST_HASH_KEY, payloadHash);
   syncQueue = [];
   saveSyncQueue();
 
-  if (byId('cloudLastSync')) byId('cloudLastSync').textContent = cloudDate(savedAt);
+  if (byId('cloudLastSync')) byId('cloudLastSync').textContent = cloudDate(updatedAt);
   updateSyncStatus('synced');
 
  } catch (err) {
@@ -364,7 +368,7 @@ async function uploadCloudData() {
    headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
    body: JSON.stringify({ user_id: user.id, app_name: CLOUD_APP_NAME, data: payload, updated_at: new Date().toISOString() })
   });
-  if (!response.ok) { const e = await response.text(); throw new Error(e || 'Erro ao enviar dados.') }
+  if (!response.ok) { const e = await response.text(); throw new Error(`HTTP ${response.status} ${response.statusText} — ${e || 'Erro ao enviar dados.'}`) }
   const result = await response.json();
   const updatedAt = result?.[0]?.updated_at;
   if (updatedAt) {
