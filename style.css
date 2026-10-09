@@ -59,3 +59,8 @@ overflow-wrap:anywhere;
 .sync-status-syncing{background:rgba(59,130,246,.3)}
 .sync-status-error{background:rgba(220,38,38,.3)}
 .sync-status-idle{background:rgba(255,255,255,.15)}
+
+/* Botão flutuante "voltar ao topo" da página (fica acima do FAB de cadastro rápido) */
+.page-to-top{position:fixed;right:26px;bottom:92px;width:48px;height:48px;border-radius:50%;border:none;background:var(--main);color:white;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 6px 16px #0004;opacity:0;pointer-events:none;transition:opacity .2s;z-index:15}
+.page-to-top.show{opacity:1;pointer-events:auto}
+@media(max-width:520px){.page-to-top{right:20px;bottom:84px}}

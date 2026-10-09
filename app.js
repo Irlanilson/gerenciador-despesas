@@ -90,7 +90,20 @@ function restoreLegacyData(show=true){
  if(show)alert('Não encontrei dados antigos neste navegador.');return false;
 }
 
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));b.classList.add('active');byId(b.dataset.tab).classList.add('active')});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));b.classList.add('active');byId(b.dataset.tab).classList.add('active');updatePageToTop()});
+
+// ─── Botão flutuante "voltar ao topo" ──────────────────────────────
+// Visível apenas na aba Despesas, e só depois de rolar a página um pouco.
+const PAGE_TO_TOP_TABS=['despesas'];
+function activeTab(){const t=document.querySelector('.tab.active');return t?t.dataset.tab:''}
+function updatePageToTop(){
+ const btn=byId('pageToTop');
+ if(!btn)return;
+ const allowed=PAGE_TO_TOP_TABS.includes(activeTab());
+ btn.classList.toggle('show',allowed&&window.scrollY>300);
+}
+function scrollPageTop(){window.scrollTo({top:0,behavior:'smooth'})}
+window.addEventListener('scroll',updatePageToTop,{passive:true});
 
 function fillYearMonth(yearId,monthId){
  const y=new Date().getFullYear(),m=new Date().getMonth()+1;
@@ -285,6 +298,7 @@ fillDates();
 ['expenseValue','recurringValue','quickValue','categoryBudget'].forEach(bindCurrencyMask);
 renderAll();
 renderCloudPanel();
+updatePageToTop();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 
 // Inicializar indicador de status e sync
